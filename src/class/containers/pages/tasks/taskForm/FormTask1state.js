@@ -1,0 +1,299 @@
+import React, { Component } from 'react'
+import mdl from './FormTask.module.css'
+import { allClass } from '../../../../constants/customHooks/customModuleClassMethod'
+import { Link } from "react-router-dom"
+
+class FormTask1state extends Component {
+    // // ----------constructor------------------------------
+    constructor(props) {
+        super(props)
+
+        // // ----------Props & context & ref ------------------------------
+        const taskState = this.props.taskState
+        const taskField = taskState.taskField
+        const isTaskUpdate = taskState.isTaskUpdate
+
+
+        // // ----------Object Property------------------------------
+        if (isTaskUpdate === true) {
+            this.formEdit = true
+        } else {
+            this.formEdit = false
+        }
+
+        // geting array from local storage
+        let data = localStorage.getItem('taskList')
+        if (data == null) {
+            this.taskData = [];
+        }
+        else if (data === "[]") {
+            this.taskData = [];
+        }
+        else {
+            this.taskData = JSON.parse(data)
+        }
+
+        // // ----------state------------------------------
+        this.state = {
+            ...taskField,
+            idErr: "",
+            titleErr: "",
+            uiTechErr: "",
+            backEndTechErr: ""
+        }
+    }
+
+
+
+    // // ----------Lifecycle Method------------------------------
+    // componentDidMount() {
+
+    // }
+
+    // shouldComponentUpdate() {
+
+    //     return true
+    // }
+
+    // componentDidUpdate() {
+
+    // }
+
+
+    // // ----------handler functions--------------------------------------------------
+    handleInputChange = (e) => {
+        if (e.target.type === "checkbox") {
+            let updatedTask = { ...this.state }
+            updatedTask.library[e.target.name] = !updatedTask.library[e.target.name]
+            this.setState({ ...updatedTask },
+                state => {
+                    let nameForm = e.target.name
+                    this.formValidation(nameForm)
+                })
+        }
+        else if (e.target.type === "select-one" || e.target.type === "radio") {
+            let updatedTask = { ...this.state }
+            updatedTask.technology[e.target.name] = e.target.value
+            this.setState({ ...updatedTask },
+                state => {
+                    let nameForm = e.target.name
+                    this.formValidation(nameForm)
+                })
+        }
+        else {
+            // // trimStart() === trimLeft()  &and& trimEnd() === trimRight()
+            this.setState({ [e.target.name]: e.target.value.trimLeft() },
+                state => {
+                    let nameForm = e.target.name
+                    this.formValidation(nameForm)
+                })
+        }
+    };
+
+    handleCreateTask = (e) => {
+        const nameFormList = ["id", "title", "uiTech", "backEndTech"]
+        nameFormList.forEach((nameForm) => {
+            this.formValidation(nameForm)
+        })
+        const { id, title, date, description, technology, library, idErr, titleErr, uiTechErr, backEndTechErr } = this.state
+        const { uiTech, backEndTech } = technology
+        if (id && title && uiTech && backEndTech && !idErr && !titleErr && !uiTechErr && !backEndTechErr) {
+            let task = { id: id, title: title, date: date, description: description, technology: { uiTech: uiTech, backEndTech: backEndTech }, library: library }
+            this.taskData.push(task);
+            localStorage.setItem('taskList', JSON.stringify(this.taskData))
+            this.props.history.push(`/task/retrieve`)
+        }
+    }
+
+    handleUpdateTask = (e) => {
+        const { id, title, date, description, technology, library, idErr, titleErr, uiTechErr, backEndTechErr } = this.state
+        const { uiTech, backEndTech } = technology
+        if (id && title && uiTech && backEndTech && !idErr && !titleErr && !uiTechErr && !backEndTechErr) {
+            let taskUpdated = { id: id, title: title, date: date, description: description, technology: { uiTech: uiTech, backEndTech: backEndTech }, library: library }
+            const editedtast = this.taskData.map(task => {
+                if (task.id === this.state.id) {
+                    return taskUpdated
+                }
+                return task
+            })
+            localStorage.setItem('taskList', JSON.stringify(editedtast))
+            this.props.history.push(`/task/retrieve`)
+        }
+    }
+
+    handleResetTask = () => {
+        this.setState({
+            id: "",
+            date: "",
+            title: "",
+            description: "",
+            idErr: "",
+            titleErr: "",
+            uiTechErr: "",
+            backEndTechErr: "",
+            technology: { uiTech: "", backEndTech: "" },
+            library: { redux: false, saga: false, numpy: false, pandas: false }
+        })
+    }
+
+    formValidation = (nameForm) => {
+        switch (nameForm) {
+            // // id validation
+            case 'id':
+                let idErr = ""
+                const idValue = this.state.id
+                if (idValue === "" || null) {
+                    idErr = "ID must not be empty"
+                }
+                else if (idValue.trim().length < 3) {
+                    idErr = 'Id must be at least 3 characters!'
+                }
+                else {
+                    idErr = ""
+                }
+                this.setState({ idErr: idErr })
+                break;
+
+            // // title validation
+            case 'title':
+                let titleErr = ""
+                const regExp = /^[ 0-9a-zA-Z ]+$/
+                const titleValue = this.state.title
+                if (titleValue === null || titleValue.trim() === "") {
+                    titleErr = "Title must not be empty"
+                }
+                else {
+                    if (titleValue.match(regExp)) {
+                        if (titleValue.trim().length < 5) {
+                            titleErr = "Title must contain at least 5 characters"
+                        }
+                        else if (titleValue.trim().length > 15) {
+                            titleErr = "Title must not exceed 15 characters"
+                        }
+                        else {
+                            titleErr = ""
+                        }
+                    }
+                    else {
+                        titleErr = 'Title must not contain any symbols'
+                    }
+                }
+                this.setState({ titleErr: titleErr })
+                break;
+
+            case "uiTech":
+                let uiTechErr = ""
+                const uiTechValue = this.state.technology.uiTech
+                if (uiTechValue === "") {
+                    uiTechErr = "Select UI Technology."
+                }
+                else {
+                    uiTechErr = ""
+                }
+                this.setState({ uiTechErr: uiTechErr })
+                break
+
+            case "backEndTech":
+                let backEndTechErr = ""
+                const backEndTechValue = this.state.technology.backEndTech
+                if (backEndTechValue === "") {
+                    backEndTechErr = "Select Back End Technology."
+                }
+                else {
+                    backEndTechErr = ""
+                }
+                this.setState({ backEndTechErr: backEndTechErr })
+                break
+
+            default:
+                break;
+        }
+    }
+
+
+    // // ----------Render------------------------------
+    render() {
+        const { id, date, title, description, technology, idErr, titleErr, uiTechErr, backEndTechErr } = this.state
+        return (
+            <div>
+                <form className={mdl.formStyle}>
+                    <div>
+                        <div className={allClass("", "formField col", mdl)}>
+                            <label className={mdl.formLable} >Task id:</label>
+                            <input disabled={this.formEdit} type="text" name="id" value={id} onChange={e => this.handleInputChange(e)} className={allClass("text-field", "formInput", mdl)} placeholder="Enter task ID" />
+                        </div>
+                        <small style={{ color: "red" }}>{idErr}</small>
+                    </div>
+
+                    <div className={allClass("", "formField col", mdl)}>
+                        <label className={mdl.formLable} >Date:</label>
+                        <input type="date" name="date" value={date} onChange={e => this.handleInputChange(e)} className={allClass("text-field", "formInput", mdl)} />
+                    </div>
+
+                    <div>
+                        <div className={allClass("", "formField col", mdl)}>
+                            <label className={mdl.formLable}>Task Title:</label>
+                            <input type="text" name="title" value={title} onChange={e => this.handleInputChange(e)} className={allClass("text-field", "formInput", mdl)} placeholder="Enter Task Title." />
+                        </div>
+                        <small style={{ color: "red" }}>{titleErr}</small>
+                    </div>
+                    <div className={allClass("", "formField col", mdl)}>
+                        <label className={mdl.formLable} >Task description :</label>
+                        <textarea rows="6" cols="30" name="description" value={description} onChange={e => this.handleInputChange(e)} className={allClass("text-field", "formInput", mdl)} />
+                    </div>
+
+                    <div>
+                        <div className={allClass("", "formField col", mdl)} >
+                            <div className={mdl.formLable}  >UI Technology:</div>
+                            <select name='uiTech' value={technology.uiTech} onChange={e => this.handleInputChange(e)} className="form-dropdown text-field">
+                                <option value="" > Select </option>
+                                <option value="react" > React </option>
+                                <option value="angular"> Angular </option>
+                                <option value="flutter"> Flutter </option>
+                                <option value="vue.js"> Vue.js </option>
+                            </select>
+                        </div>
+                        <small style={{ color: "red" }}>{uiTechErr}</small>
+                    </div>
+                    <div>
+                        <div className={allClass("", "formField col", mdl)}>
+                            <div className={mdl.formLable} >Back-End Technology :</div>
+                            <label className={mdl.formBackEndLabel}>Python
+                                <input type="radio" name="backEndTech" value="python" onChange={e => this.handleInputChange(e)} checked={technology.backEndTech === 'python'} />
+                            </label>
+                            <label className={mdl.formBackEndLabel}>.NET
+                                <input type="radio" name="backEndTech" value=".net" onChange={e => this.handleInputChange(e)} checked={technology.backEndTech === '.net'} />
+                            </label>
+                            <label className={mdl.formBackEndLabel}>PHP
+                                <input type="radio" name="backEndTech" value="php" onChange={e => this.handleInputChange(e)} checked={technology.backEndTech === 'php'} />
+                            </label>
+                        </div>
+                        <small style={{ color: "red" }}>{backEndTechErr}</small>
+                    </div>
+                    <div className={allClass("", "formField col", mdl)}>
+                        <div className={mdl.formLable} >Library Used:</div>
+                        <label className={mdl.formLibraryLabel}>Redux<input type="checkbox" name="redux" onChange={e => this.handleInputChange(e)} checked={this.state.library.redux} /> </label>
+                        <label className={mdl.formLibraryLabel}>Saga<input type="checkbox" name="saga" onChange={e => this.handleInputChange(e)} checked={this.state.library.saga} /> </label>
+                        <label className={mdl.formLibraryLabel}>Numpy<input type="checkbox" name="numpy" onChange={e => this.handleInputChange(e)} checked={this.state.library.numpy} /> </label>
+                        <label className={mdl.formLibraryLabel}>Pandas<input type="checkbox" name="pandas" onChange={e => this.handleInputChange(e)} checked={this.state.library.pandas} /></label>
+                    </div>
+
+                    {this.formEdit === false ?
+                        <div className="field-btn">
+                            <button type='button' onClick={event => this.handleCreateTask(event)} className={allClass("btn btn-success", "buttonStyl", mdl)}>AddTask</button>
+                            < button type="reset" onClick={event => this.handleResetTask(event)} className={allClass("btn btn-secondary", "buttonStyl", mdl)} >Reset</button>
+                            < Link to={`/task/retrieve`} type="button" className={allClass("btn btn-outline-primary mr-2", "buttonStyl", mdl)}>Cancel </Link>
+                        </div>
+                        :
+                        <div className="field-btn">
+                            <button type='button' onClick={event => this.handleUpdateTask(event)} className={allClass("btn btn-warning", "buttonStyl", mdl)}>Update Task</button>
+                            < Link to={`/task/retrieve`} type="button" className={allClass("btn btn-outline-primary mr-2", "buttonStyl", mdl)}>Cancel </Link>
+                        </div>
+                    }
+                </form>
+            </div>
+        )
+    }
+}
+
+export default FormTask1state
