@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import mdl from "./TaskForm.module.css"
-import { allClass } from '../../../../constants/customHooks/customModuleClassMethod'
+import { allClass } from '../../../../helper/customHooks/customModuleClassMethod'
 import { useHistory, Link } from "react-router-dom"
 
 function TaskForm4ref(props) {

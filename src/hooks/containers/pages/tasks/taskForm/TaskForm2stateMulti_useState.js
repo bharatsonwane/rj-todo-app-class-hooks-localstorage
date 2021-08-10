@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import mdl from "./TaskForm.module.css"
-import { allClass } from '../../../../constants/customHooks/customModuleClassMethod'
+import { allClass } from '../../../../helper/customHooks/customModuleClassMethod'
 import { useHistory, Link } from "react-router-dom"
 import { useStateCallback } from "../../../customeHooks/customeHooks"
 
